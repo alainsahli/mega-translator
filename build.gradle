@@ -14,16 +14,25 @@ tasks.withType(ScalaCompile) {
   scalaCompileOptions.useAnt = false
 }
 
-task scalaTest(dependsOn: testClasses) << {
-  ant.taskdef(name: 'scalatest',
-          classname: 'org.scalatest.tools.ScalaTestAntTask',
-          classpath: sourceSets.test.runtimeClasspath.asPath
-  )
-  ant.scalatest(runpath: sourceSets.test.compileClasspath,
-          fork: 'false',
-          haltonfailure: 'true',
-          suite: 'TranslatorTest')
-          { reporter(type: 'stdout') }
+task scalaTest(dependsOn: testClasses) {
+  inputs.files sourceSets.main.output.classesDir
+  inputs.files sourceSets.test.output.classesDir
+  outputs.files testResultsDir
+
+  doLast {
+    ant.taskdef(name: 'scalatest',
+            classname: 'org.scalatest.tools.ScalaTestAntTask',
+            classpath: sourceSets.test.runtimeClasspath.asPath
+    )
+    ant.scalatest(runpath: sourceSets.test.compileClasspath,
+            fork: 'false',
+            haltonfailure: 'true',
+            suite: 'TranslatorTest'
+    ) {
+      reporter(type: 'stdout')
+      reporter(type: 'junitxml', directory: testResultsDir)
+    }
+  }
 }
 
 check.dependsOn scalaTest
