@@ -3,6 +3,9 @@ package translator
 import java.io.InputStream
 import scala.collection.JavaConversions.propertiesAsScalaMap
 import java.util.Properties
+import scala.Option
+import scala.Predef._
+import scala.Some
 
 object PropertyReader {
 
@@ -12,25 +15,19 @@ object PropertyReader {
     Map(properties.toSeq: _*)
   }
 
-  def inferPrefix(properties: Map[String, String]): Option[String] = {
-    val valuesToSearch = properties.filter(_._2.length >= 3)
-    if (valuesToSearch.isEmpty) None
-    else {
-      val valuePrefixes = valuesToSearch.values.groupBy(_.substring(0, 3))
-      val mostCommonPrefix = valuePrefixes.maxBy(_._2.size)._1
-      val valuesWithMostCommonPrefix = valuesToSearch.filter(_._2.startsWith(mostCommonPrefix)).map(_._2)
-
-      Some(findCommonPrefix(valuesWithMostCommonPrefix, mostCommonPrefix))
+  def inferPrefix(properties: Map[String, String], minLength: Int): Option[String] = {
+    def inferPrefix(values: Iterable[String], minLength: Int, result: Option[String]): Option[String] = {
+      val matches = values.filter(_.length >= minLength)
+      if (matches.isEmpty) result
+      else {
+        val valuesByPrefix = matches.groupBy(_ take minLength)
+        val valuesOfMostCommonPrefix = valuesByPrefix.maxBy(_._2.size)
+        if (valuesOfMostCommonPrefix._2.size < 2) result
+        else inferPrefix(valuesByPrefix(valuesOfMostCommonPrefix._1), minLength + 1, Some(valuesOfMostCommonPrefix._1))
+      }
     }
+
+    inferPrefix(properties.values, minLength, None)
   }
 
-  def findCommonPrefix(values: Iterable[String], prefix: String): String = {
-    if (values.filter(_.startsWith(prefix)).size == values.size) {
-      val head = values.head
-      if (head.size == prefix.size) prefix
-      else findCommonPrefix(values, values.head.substring(0, prefix.length + 1))
-    }
-    else
-      prefix.substring(0, prefix.length - 1)
-  }
 }

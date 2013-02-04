@@ -21,24 +21,31 @@ class PropertyReaderTest extends AssertionsForJUnit {
   }
 
   @Test
+  def givenASingleValueThereIsNoCommonPrefix() {
+    val inputStream = createInputStream(("key1", "*a value"))
+    val properties = PropertyReader.read(inputStream)
+    assert(PropertyReader.inferPrefix(properties, 1) === None)
+  }
+
+  @Test
+  def givenValuesWithTooShortCommonPrefixReturnNoCommonPrefix() {
+    val inputStream = createInputStream(("key1", "**value"), ("key2", "**other value"))
+    val properties = PropertyReader.read(inputStream)
+    assert(PropertyReader.inferPrefix(properties, 3) === None)
+  }
+
+  @Test
   def givenValuesWithCommonPrefixReturnCommonPrefix() {
     val inputStream = createInputStream(("key1", "(fr)a value"), ("key2", "(fr) another value"))
     val properties = PropertyReader.read(inputStream)
-    assert(PropertyReader.inferPrefix(properties) === Some("(fr)"))
+    assert(PropertyReader.inferPrefix(properties, 4) === Some("(fr)"))
   }
 
   @Test
   def givenValueThatEqualsCommonPrefixReturnCommonPrefix() {
     val inputStream = createInputStream(("key1", "(fr)value"), ("key2", "(fr)"))
     val properties = PropertyReader.read(inputStream)
-    assert(PropertyReader.inferPrefix(properties) === Some("(fr)"))
-  }
-
-  @Test
-  def givenEmptyValueReturnEmptyCommonPrefix() {
-    val inputStream = createInputStream(("key1", ""))
-    val properties = PropertyReader.read(inputStream)
-    assert(PropertyReader.inferPrefix(properties) === None)
+    assert(PropertyReader.inferPrefix(properties, 4) === Some("(fr)"))
   }
 
   private def createInputStream(keyValuePairs: (String, String)*) = {
