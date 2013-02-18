@@ -22,8 +22,8 @@ object PropertyReader {
       else {
         val valuesByPrefix = matches.groupBy(_ take minLength)
         val (prefix, elements) = valuesByPrefix.maxBy(_._2.size)
-        if (elements.size < 2) result
-        else inferPrefix(valuesByPrefix(prefix), minLength + 1, Some(prefix))
+        if (elements.size < 2 || result.isDefined && values.size != elements.size) result
+        else inferPrefix(elements, minLength + 1, Some(prefix))
       }
     }
 

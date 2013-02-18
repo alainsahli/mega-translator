@@ -42,6 +42,13 @@ class PropertyReaderTest extends AssertionsForJUnit {
   }
 
   @Test
+  def givenValuesWithCommonPrefixReturnsMostCommonPrefix() {
+    val inputStream = createInputStream(("key1", "(fr)a value"), ("key2", "(fr) another value"), ("key3", "(fr) yet another value"))
+    val properties = PropertyReader.read(inputStream)
+    assert(PropertyReader.inferPrefix(properties, 4) === Some("(fr)"))
+  }
+
+  @Test
   def givenValueThatEqualsCommonPrefixReturnCommonPrefix() {
     val inputStream = createInputStream(("key1", "(fr)value"), ("key2", "(fr)"))
     val properties = PropertyReader.read(inputStream)
