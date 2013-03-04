@@ -3,8 +3,15 @@ package translator
 import java.io.ByteArrayInputStream
 import org.junit.Test
 import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.PrivateMethodTester
 
-class PropertyReaderTest extends AssertionsForJUnit {
+class PropertyReaderTest extends AssertionsForJUnit with PrivateMethodTester {
+
+  @Test
+  def saveEmptyFileReturnsEmptyTranslationDetails() {
+    val translationFileDetails = PropertyReader.save(new ByteArrayInputStream(new Array[Byte](0)), "testFile")
+    assert(translationFileDetails === TranslationFileDetails("testFile", getHashCode(Set()), ""))
+  }
 
   @Test
   def givenAnEmptyStreamReturnAnEmptyList() {
@@ -60,6 +67,11 @@ class PropertyReaderTest extends AssertionsForJUnit {
       case (key: String, value: String) => s"$key=$value"
     }.mkString("\n")
     new ByteArrayInputStream(properties.getBytes)
+  }
+
+  private def getHashCode(keys: Set[Nothing]): String = {
+    val decorateGetHashCode = PrivateMethod[String]('getHashCode)
+    PropertyReader invokePrivate decorateGetHashCode(keys)
   }
 
 }

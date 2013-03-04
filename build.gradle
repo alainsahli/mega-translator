@@ -1,21 +1,22 @@
 apply plugin: 'scala'
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    compile 'org.scala-lang:scala-library:2.10.0'
-    testCompile 'org.scalatest:scalatest_2.10:1.9.1'
-    testCompile 'junit:junit:4.10'
+  compile 'org.scala-lang:scala-library:2.10.0'
+  compile 'com.google.guava:guava:13.0'
+  testCompile 'org.scalatest:scalatest_2.10:1.9.1'
+  testCompile 'junit:junit:4.10'
 }
 
 tasks.withType(ScalaCompile) {
-    // use zync-based incremental compiler
-    scalaCompileOptions.useAnt = false
+  // use zync-based incremental compiler
+  scalaCompileOptions.useAnt = false
 }
 
 task wrapper(type: Wrapper) {
-    description = 'Generates gradlew executables'
-    gradleVersion = '1.4'
+  description = 'Generates gradlew executables'
+  gradleVersion = '1.4'
 }
