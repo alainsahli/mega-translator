@@ -14,6 +14,13 @@ class PropertyReaderTest extends AssertionsForJUnit with PrivateMethodTester {
   }
 
   @Test
+  def saveNonEmptyFileReturnsNonEmptyTranslationDetails() {
+    val translationFileDetails = PropertyReader.save(new ByteArrayInputStream("key1=(fr)a value\nkey2=(fr)some value".getBytes), "testFile")
+    assert(translationFileDetails === TranslationFileDetails("testFile", getHashCode(Set("key1", "key2")), "(fr)"))
+  }
+
+
+  @Test
   def givenAnEmptyStreamReturnAnEmptyList() {
     val emptyInputStream = createInputStream()
     assert(PropertyReader.read(emptyInputStream) === Map())
@@ -69,7 +76,7 @@ class PropertyReaderTest extends AssertionsForJUnit with PrivateMethodTester {
     new ByteArrayInputStream(properties.getBytes)
   }
 
-  private def getHashCode(keys: Set[Nothing]): String = {
+  private def getHashCode(keys: Set[String]): String = {
     val decorateGetHashCode = PrivateMethod[String]('getHashCode)
     PropertyReader invokePrivate decorateGetHashCode(keys)
   }

@@ -6,41 +6,57 @@ import java.util.Properties
 import scala.Option
 import scala.Predef._
 import scala.Some
-import com.google.common.io.{Files, ByteStreams}
+import com.google.common.io.{Closeables, ByteStreams}
 import java.security.MessageDigest
 
 object PropertyReader {
 
   def save(inputStream: InputStream, fileName: String): TranslationFileDetails = {
     // todo (etst) decide where to put file on file system
-    val file = new File(fileName)
+    val tempFile = File.createTempFile("mega-translator", ".tmp")
 
-    copyStream(inputStream, file)
-    val properties = read(new FileInputStream(file))
+    copyStream(inputStream, tempFile)
+    val properties = read(new FileInputStream(tempFile))
     val hashCode = getHashCode(properties.keySet)
     val prefix = inferPrefix(properties, 3)
 
     val parent = new File("root", hashCode)
     parent.mkdirs()
 
-    Files.move(file, new File(parent, fileName))
+    copyStream(new FileInputStream(tempFile), new File(parent, fileName))
+    tempFile.delete()
 
     TranslationFileDetails(fileName, hashCode, prefix.getOrElse(""))
   }
 
   private def getHashCode(keys: Set[String]): String = {
     val messageDigest = MessageDigest.getInstance("MD5")
-    val bytes = messageDigest.digest(keys.mkString.getBytes("UTF-8"))
+    val orderedKeys = keys.toList.sorted.mkString.getBytes("UTF-8")
+    val bytes = messageDigest.digest(orderedKeys)
     BigInt(bytes).toString(36)
   }
 
   private def copyStream(inputStream: InputStream, file: File) {
-    ByteStreams.copy(inputStream, new FileOutputStream(file))
+    var outputStream: FileOutputStream = null
+    try {
+      outputStream = new FileOutputStream(file)
+      ByteStreams.copy(inputStream, outputStream)
+    }
+    finally {
+      Closeables.closeQuietly(inputStream)
+      Closeables.closeQuietly(outputStream)
+    }
   }
 
   def read(inputStream: InputStream): Map[String, String] = {
     val properties: Properties = new Properties()
-    properties.load(inputStream)
+
+    try {
+      properties.load(inputStream)
+    } finally {
+      Closeables.closeQuietly(inputStream)
+    }
+
     Map(properties.toSeq: _*)
   }
 
