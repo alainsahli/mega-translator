@@ -1,0 +1,5 @@
+apply plugin: 'java'
+
+dependencies {
+    compile 'org.springframework:spring-webmvc:3.2.1.RELEASE'
+}
